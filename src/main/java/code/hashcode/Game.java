@@ -25,18 +25,21 @@ public class Game {
     public List<Photo> photos = new ArrayList<>();
     public List<Slide> slides = new ArrayList<>();
     public List<Slide> maximum = new ArrayList<>();
-    public int globalInteration = 500;
-    public int localInteration = 20000;
-    public double temperature = 10000.0;
-    public float reductTempRatio = 1.02f;
+    public int globalInteration;
+    public int localInteration;
+    public double temperature;
+    public float reductTempRatio;
     Random random = new Random(System.currentTimeMillis());
 
     //~ ----------------------------------------------------------------------------------------------------------------
     //~ Constructors
     //~ ----------------------------------------------------------------------------------------------------------------
 
-    public Game() {
-        // TODO : add List size
+    public Game(int globalInteration, int localInteration, double temperature, float reductTempRatio) {
+        this.globalInteration = globalInteration;
+        this.localInteration = localInteration;
+        this.temperature = temperature;
+        this.reductTempRatio = reductTempRatio;
     }
 
     //~ ----------------------------------------------------------------------------------------------------------------
@@ -100,7 +103,7 @@ public class Game {
         }
     }
 
-    static long evaluate(Slide slide1, Slide slide2) {
+    static int evaluate(Slide slide1, Slide slide2) {
         Set<String> tags1 = slide1.getTags();
         Set<String> tags2 = slide2.getTags();
 
@@ -114,62 +117,32 @@ public class Game {
         return Math.min(common, Math.min(tags1.size() - common, tags2.size() - common));
     }
 
-    long deltaReverseRange(int slide1, int slide2) {
-
-        if (slide2 <= slide1) {
-            int temp = slide1;
-            slide1 = slide2;
-            slide2 = temp;
+    int deltaReverseRange(int first, int second) {
+        if (second < first) {
+            int temp = first;
+            first = second;
+            second = temp;
         }
 
-        //point when remove slide1
-        long pointToRemove = 0;
-
-        //point when add slide 2 to the position of slide1
-        long pointToAdd = 0;
-
-        if (slide1 > 0) {
-            if (slide2 == (slides.size() - 1)) {
-                pointToAdd += evaluate(slides.get(slide2), slides.get(slide1 - 1)); //
-            }
-            pointToRemove += evaluate(slides.get(slide1), slides.get(slide1 - 1));
-            pointToAdd += evaluate(slides.get(slide2), slides.get(slide1 - 1)); // AE
+        if ((first == (second - 1)) || (first == (second - 2))) {
+            return delta(first, second);
+        } else {
+            int pointToRemove = calculateTransaction(first, slides.get(first)) + calculateTransaction(second, slides.get(second));
+            swap2slides(first, second, slides);
+            swap2slides(first + 1, second - 1, slides);
+            int pointToAdd = calculateTransaction(first, slides.get(first)) + calculateTransaction(second, slides.get(second));
+            swap2slides(first, second, slides);
+            swap2slides(first + 1, second - 1, slides);
+            return pointToAdd - pointToRemove;
         }
-        if (slide2 < (slides.size() - 1)) {
-            if (slide1 == 0) {
-                pointToAdd += evaluate(slides.get(slide1), slides.get(slide2 + 1)); //
-            }
-            pointToRemove += evaluate(slides.get(slide2), slides.get(slide2 + 1));
-            pointToAdd += evaluate(slides.get(slide1), slides.get(slide2 + 1));
-        }
-
-        return pointToAdd - pointToRemove;
     }
 
-    long delta(int slide1, int slide2) {
-        //point when remove slide1
-        long pointToRemove = 0;
-
-        //point when add slide 2 to the position of slide1
-        long pointToAdd = 0;
-
-        if (slide1 > 0) {
-            pointToRemove += evaluate(slides.get(slide1), slides.get(slide1 - 1));
-            pointToAdd += evaluate(slides.get(slide2), slides.get(slide1 - 1));
-        }
-        if (slide1 < (slides.size() - 1)) {
-            pointToRemove += evaluate(slides.get(slide1), slides.get(slide1 + 1));
-            pointToAdd += evaluate(slides.get(slide2), slides.get(slide1 + 1));
-        }
-        if (slide2 > 0) {
-            pointToRemove += evaluate(slides.get(slide2), slides.get(slide2 - 1));
-            pointToAdd += evaluate(slides.get(slide1), slides.get(slide2 - 1));
-        }
-        if (slide2 < (slides.size() - 1)) {
-            pointToRemove += evaluate(slides.get(slide2), slides.get(slide2 + 1));
-            pointToAdd += evaluate(slides.get(slide1), slides.get(slide2 + 1));
-        }
-
+    int delta(int first, int second) {
+        int pointToRemove = calculateTransaction(first, slides.get(first)) + calculateTransaction(second, slides.get(second));
+        swap2slides(first, second, slides);
+        int pointToAdd = calculateTransaction(first, slides.get(first)) + calculateTransaction(second, slides.get(second));
+        // Swap back
+        swap2slides(first, second, slides);
         return pointToAdd - pointToRemove;
     }
 
@@ -179,84 +152,22 @@ public class Game {
         VerticalSlide newSlide1 = new VerticalSlide(slide2.photo2, slide1.photo2);
         VerticalSlide newSlide2 = new VerticalSlide(slide2.photo1, slide1.photo1);
 
-        int slide1Before = 0;
-        int slide2Before = 0;
+        int pointToRemove = calculateTransaction(first, slides.get(first)) + calculateTransaction(second, slides.get(second));
+        slides.set(first, newSlide1);
+        slides.set(second, newSlide2);
+        int pointToAdd = calculateTransaction(first, newSlide1) + calculateTransaction(second, newSlide2);
 
-        int slide1After = 0;
-        int slide2After = 0;
+        slides.set(first, slide1);
+        slides.set(second, slide2);
 
-        if (first > 0) {
-            slide1Before += evaluate(slide1, slides.get(first - 1));
-            slide1After += evaluate(newSlide1, slides.get(first - 1));
-        }
-        if (first < (slides.size() - 1)) {
-            slide1Before += evaluate(slide1, slides.get(first + 1));
-            slide1After += evaluate(newSlide1, slides.get(first + 1));
-        }
-        if (second > 0) {
-            slide2Before += evaluate(slide2, slides.get(second - 1));
-            slide2After += evaluate(newSlide2, slides.get(second - 1));
-        }
-        if (second < (slides.size() - 1)) {
-            slide2Before += evaluate(slide2, slides.get(second + 1));
-            slide2After += evaluate(newSlide2, slides.get(second + 1));
-        }
-
-        return slide1After + slide2After - slide1Before - slide2Before;
+        return pointToAdd - pointToRemove;
     }
 
-    private void runCoreWithReverse() {
-        // We have a solution
-//        nextSlides = evaluateGlobal(slides);
-        maximum.addAll(slides);
-
-        int i = 0;
-        while (i < globalInteration) {
-            int j = 0;
-            while (j < localInteration) {
-//                nextSlides = evaluateGlobal(slides);
-
-                // switch
-                int first = random.nextInt(slides.size());
-                int second = random.nextInt(slides.size());
-
-                if (first > second) {
-                    int temp = first;
-                    first = second;
-                    second = temp;
-                }
-
-                boolean vertical = slides.get(first).isVertical();
-                boolean vertical1 = slides.get(second).isVertical();
-
-                long delta;
-                boolean verticalSwap = false;
-                if (vertical && vertical1) {
-                    delta = deltaSwapPhoto(first, second);
-                    if (delta < 0) {
-                        delta = deltaReverseRange(first, second);
-                        verticalSwap = false;
-                    } else {
-                        verticalSwap = true;
-                    }
-                } else {
-                    delta = deltaReverseRange(first, second);
-                }
-                if (delta > 0) {
-                    // Keep the best
-                    swapWithRangeReverse(first, second, vertical, vertical1, verticalSwap);
-                    maximum.clear();
-                    maximum.addAll(slides);
-                } else if ((((300 + delta) / temperature) > random.nextFloat())) {
-                    // switch slides
-                    swapWithRangeReverse(first, second, vertical, vertical1, verticalSwap);
-                }
-                j++;
-            }
-            temperature = reductTempRatio * temperature;
-            i++;
-        }
-        slides = maximum;
+    private int calculateTransaction(int slidePosition, Slide slide) {
+        //J-
+        return    ((slidePosition > 0) ? evaluate(slide, slides.get(slidePosition - 1)) : 0)
+                + (slidePosition < (slides.size() - 1) ? evaluate(slides.get(slidePosition), slides.get(slidePosition + 1)) : 0);
+        //J+
     }
 
     private void swapWithRangeReverse(int first, int second, boolean vertical, boolean vertical1, boolean verticalSwap) {
@@ -274,7 +185,7 @@ public class Game {
     }
 
     private void swapRange(int first, int second) {
-        List<Slide> slides = this.slides.subList(first, second);
+        List<Slide> slides = this.slides.subList(first, second + 1);
         for (int i1 = 0; i1 < (slides.size() / 2); i1++) {
             swap2slides(i1, slides.size() - 1 - i1, slides);
         }
@@ -297,20 +208,22 @@ public class Game {
                 do {
                     first = random.nextInt(slides.size());
                     second = random.nextInt(slides.size());
-                } while (first == second);
+                } while (first >= second);
 
                 boolean vertical = slides.get(first).isVertical();
                 boolean vertical1 = slides.get(second).isVertical();
 
                 long delta;
                 boolean verticalSwap = false;
+
                 if (vertical && vertical1) {
-                    delta = deltaSwapPhoto(first, second);
-                    if (delta < 0) {
+                    float swapVertical = random.nextFloat();
+                    if (swapVertical > 0.5) {
+                        verticalSwap = true;
+                        delta = deltaSwapPhoto(first, second);
+                    } else {
                         delta = delta(first, second);
                         verticalSwap = false;
-                    } else {
-                        verticalSwap = true;
                     }
                 } else {
                     delta = delta(first, second);
@@ -321,10 +234,73 @@ public class Game {
                     maximum.clear();
                     maximum.addAll(slides);
                 }
-//                else if ((((300 + delta) / temperature) > random.nextFloat())) {
-//                    // switch slides
-//                    switchStandard(first, second, vertical, vertical1, verticalSwap);
-//                }
+                else if ((((300 + delta) / temperature) > random.nextFloat())) {
+                    // switch slides
+                    switchStandard(first, second, vertical, vertical1, verticalSwap);
+                }
+                j++;
+            }
+            temperature = reductTempRatio * temperature;
+            i++;
+        }
+        slides = maximum;
+    }
+
+    private void runCoreWithReverse() {
+        // We have a solution
+//        nextSlides = evaluateGlobal(slides);
+        maximum.addAll(slides);
+        int maximumTransactions = 0;
+        int i = 0;
+        int currentTransactions = 0;
+        while (i < globalInteration) {
+            int j = 0;
+            while (j < localInteration) {
+//                nextSlides = evaluateGlobal(slides);
+
+                // switch
+                int first, second;
+                do {
+                    first = random.nextInt(slides.size());
+                    second = random.nextInt(slides.size());
+                } while (first >= second);
+
+                boolean vertical = slides.get(first).isVertical();
+                boolean vertical1 = slides.get(second).isVertical();
+
+                long delta;
+                boolean verticalSwap = false;
+                if (vertical && vertical1) {
+                    float swapVertical = random.nextFloat();
+                    if (swapVertical > 0.4) {
+                        verticalSwap = true;
+                        delta = deltaSwapPhoto(first, second);
+                    } else {
+                        delta = deltaReverseRange(first, second);
+                        verticalSwap = false;
+                    }
+                } else {
+                    delta = deltaReverseRange(first, second);
+                }
+                if (delta > 0) {
+                    // Keep the best
+                    swapWithRangeReverse(first, second, vertical, vertical1, verticalSwap);
+                    currentTransactions += delta;
+                    if (maximumTransactions < currentTransactions) {
+                        maximum.clear();
+                        maximum.addAll(slides);
+                        maximumTransactions = currentTransactions;
+                    }
+                }
+                else {
+                    double test = (300 + delta) / temperature;
+//                    System.err.println("temp random : " + test);
+                    if ((test > random.nextFloat())) {
+                        // switch slides
+                        swapWithRangeReverse(first, second, vertical, vertical1, verticalSwap);
+                        currentTransactions += delta;
+                    }
+                }
                 j++;
             }
             temperature = reductTempRatio * temperature;

@@ -18,11 +18,10 @@ public class InputReader {
     //~ Methods
     //~ ----------------------------------------------------------------------------------------------------------------
 
-    public static Game readFile(String fileName) throws FileNotFoundException {
+    public static Game readFile(String fileName, Game game) throws FileNotFoundException {
         Scanner scanner = new Scanner(new File(fileName));
         int nbPhotos = scanner.nextInt();
         scanner.nextLine();
-        Game game = new Game();
 
         // Jump the first line
         for (int i = 0; i < nbPhotos; i++) {

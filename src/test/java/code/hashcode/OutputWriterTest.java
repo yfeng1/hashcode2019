@@ -6,8 +6,6 @@
  */
 package code.hashcode;
 
-import java.io.File;
-
 import org.junit.Test;
 
 
@@ -21,7 +19,7 @@ public class OutputWriterTest {
     public void test1() throws Exception {
         String fileName = "./src/test/resources/code/hashcode/out/testOut1";
 
-        Game game = new Game();
+        Game game = new Game(1000, 200000, 100000.0, 1.02f);
         game.addSlide(new HorizonSlide(new Photo(1)));
         game.addSlide(new VerticalSlide(new Photo(3), new Photo(2)));
 
