@@ -18,7 +18,7 @@ public class GameTest {
     @Test
     public void testInit() throws Exception {
         String fileName = "./src/test/resources/code/hashcode/input/a_example.txt";
-        Game game = InputReader.readFile(fileName);
+        Game game = InputReader.readFile(fileName, new Game(1000, 200000, 100000.0, 1.02f));
         game.run();
         String fileName1 = "./src/test/resources/code/hashcode/out/a0.out";
         OutputWriter.writeFile(fileName1, game);
@@ -28,7 +28,7 @@ public class GameTest {
     @Test
     public void testInit2() throws Exception {
         String fileName = "./src/test/resources/code/hashcode/input/b_lovely_landscapes.txt";
-        Game game = InputReader.readFile(fileName);
+        Game game = InputReader.readFile(fileName, new Game(1000, 200000, 100000.0, 1.02f));
         game.run();
         String fileName1 = "./src/test/resources/code/hashcode/out/b0.out";
         OutputWriter.writeFile(fileName1, game);
@@ -38,7 +38,7 @@ public class GameTest {
     @Test
     public void testInit3() throws Exception {
         String fileName = "./src/test/resources/code/hashcode/input/c_memorable_moments.txt";
-        Game game = InputReader.readFile(fileName);
+        Game game = InputReader.readFile(fileName, new Game(1000, 200000, 100000.0, 1.02f));
         game.run();
         String fileName1 = "./src/test/resources/code/hashcode/out/c0.out";
         OutputWriter.writeFile(fileName1, game);
@@ -48,7 +48,7 @@ public class GameTest {
     @Test
     public void testInit4() throws Exception {
         String fileName = "./src/test/resources/code/hashcode/input/d_pet_pictures.txt";
-        Game game = InputReader.readFile(fileName);
+        Game game = InputReader.readFile(fileName, new Game(1000, 200000, 100000.0, 1.02f));
         game.run();
         String fileName1 = "./src/test/resources/code/hashcode/out/d0.out";
         OutputWriter.writeFile(fileName1, game);
@@ -58,7 +58,7 @@ public class GameTest {
     @Test
     public void testInit5() throws Exception {
         String fileName = "./src/test/resources/code/hashcode/input/e_shiny_selfies.txt";
-        Game game = InputReader.readFile(fileName);
+        Game game = InputReader.readFile(fileName, new Game(1000, 200000, 100000.0, 1.02f));
         game.run();
         String fileName1 = "./src/test/resources/code/hashcode/out/e0.out";
         OutputWriter.writeFile(fileName1, game);
